@@ -1,0 +1,7 @@
+## Interface: 110105
+## Title: RatedStats NoChat
+## Notes: Blocks chat input while in PvP instances
+## Author: liamnap
+## Version: 1.0
+
+RatedStats_NoChat.lua
