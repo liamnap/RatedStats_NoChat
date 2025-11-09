@@ -1,7 +1,9 @@
-## Interface: 110105
-## Title: RatedStats NoChat
+## Title: RatedStats - NoChat
+## Interface: 110200
 ## Notes: Blocks chat input while in PvP instances
+## DefaultState: enabled
 ## Author: liamnap
-## Version: 1.0
+## OptionalDeps: RatedStats
+## IconTexture: Interface\AddOns\RatedStats\RatedStats.tga
 
 RatedStats_NoChat.lua
