@@ -12,11 +12,18 @@ RatedStats_NoChatDB = RatedStats_NoChatDB or {}
 
 -- defaults
 local defaults = {
-    enabled = true,                 -- master toggle
-    allowWhispers = false,          -- allow whispers while blocking other chat
-    blockPvp = true,                -- block chat in battlegrounds
-    blockArena = true,              -- block chat in arenas
-    allowChatInSoloShuffle = false, -- allow chat in Solo Shuffle even if arenas are blocked
+    allowWhispers       = false, -- allow whispers while blocking other chat
+
+    -- per-mode blocks (all default ON)
+    blockArenaSkirmish  = true,  -- non-rated arena skirmishes
+    blockNormalBG       = true,  -- normal battlegrounds
+    blockEpicBG         = true,  -- epic battlegrounds
+    blockSoloShuffle    = true,  -- rated Solo Shuffle
+    block2v2            = true,  -- rated 2v2
+    block3v3            = true,  -- rated 3v3
+    blockBlitz          = true,  -- rated Battleground Blitz (solo RBG)
+    blockRatedBG        = true,  -- rated battlegrounds (10v10)
+    blockOtherPvP       = true,  -- brawls / anything else not matched above
 }
 
 local function ApplyDefaults()
@@ -54,38 +61,129 @@ local function RestoreChat()
 end
 
 local function IsSoloShuffle()
-    if C_PvP and C_PvP.IsSoloShuffle then
+    if not C_PvP then
+        return false
+    end
+
+    -- rated solo shuffle
+    if C_PvP.IsRatedSoloShuffle and C_PvP.IsRatedSoloShuffle() then
+        return true
+    end
+
+    -- generic solo shuffle flag (non-rated)
+    if C_PvP.IsSoloShuffle then
         local ok, isSolo = pcall(C_PvP.IsSoloShuffle)
-        if ok then
-            return isSolo
+        if ok and isSolo then
+            return true
         end
     end
+
+    return false
+end
+
+-- classify the *current* PvP mode we are in
+-- returns one of:
+--   "skirmish", "normalbg", "epicbg",
+--   "soloshuffle", "2v2", "3v3",
+--   "blitz", "ratedbg", "other"
+local function GetPvPMode()
+    local inInstance, instanceType = IsInInstance()
+    if not inInstance or (instanceType ~= "pvp" and instanceType ~= "arena") then
+        return nil
+    end
+
+    -- brawl solo shuffle / solo RBG are always treated as "other"
+    if C_PvP then
+        if C_PvP.IsBrawlSoloShuffle and C_PvP.IsBrawlSoloShuffle() then
+            return "other"
+        end
+        if C_PvP.IsBrawlSoloRBG and C_PvP.IsBrawlSoloRBG() then
+            return "other"
+        end
+    end
+
+    -- rated battleground blitz (solo RBG)
+    if C_PvP and C_PvP.IsRatedSoloRBG and C_PvP.IsRatedSoloRBG() then
+        return "blitz"
+    end
+
+    -- solo shuffle (rated or non-rated, brawl already filtered above)
+    if IsSoloShuffle() then
+        return "soloshuffle"
+    end
+
+    -- rated battlegrounds (10v10)
+    if C_PvP and C_PvP.IsRatedBattleground and C_PvP.IsRatedBattleground() then
+        return "ratedbg"
+    end
+
+    if instanceType == "arena" then
+        if C_PvP and C_PvP.IsRatedArena and C_PvP.IsRatedArena() then
+            -- distinguish 2v2 vs 3v3 by group size
+            local size = GetNumGroupMembers()
+            if size and size <= 2 then
+                return "2v2"
+            elseif size and size >= 3 then
+                return "3v3"
+            else
+                return "other"
+            end
+        else
+            -- non-rated arena = skirmish
+            return "skirmish"
+        end
+    elseif instanceType == "pvp" then
+        -- non-rated BGs: normal vs epic by max players
+        local _, _, _, _, maxPlayers = GetInstanceInfo()
+        if maxPlayers and maxPlayers >= 30 then
+            return "epicbg"
+        else
+            return "normalbg"
+        end
+    end
+
+    -- anything else (including odd future modes)
+    return "other"
+end
+
+-- map a PvP mode string to the appropriate DB flag
+local function IsModeBlocked(mode)
+    if not RatedStats_NoChatDB or not mode then
+        return false
+    end
+
+    local db = RatedStats_NoChatDB
+
+    if mode == "skirmish" then
+        return db.blockArenaSkirmish
+    elseif mode == "normalbg" then
+        return db.blockNormalBG
+    elseif mode == "epicbg" then
+        return db.blockEpicBG
+    elseif mode == "soloshuffle" then
+        return db.blockSoloShuffle
+    elseif mode == "2v2" then
+        return db.block2v2
+    elseif mode == "3v3" then
+        return db.block3v3
+    elseif mode == "blitz" then
+        return db.blockBlitz
+    elseif mode == "ratedbg" then
+        return db.blockRatedBG
+    elseif mode == "other" then
+        return db.blockOtherPvP
+    end
+
     return false
 end
 
 local function ShouldBlockChat(editBox)
-    if not RatedStats_NoChatDB or not RatedStats_NoChatDB.enabled then
+    if not RatedStats_NoChatDB then
         return false
     end
 
-    local inInstance, instanceType = IsInInstance()
-    if not inInstance then
-        return false
-    end
-
-    local blockInstance = false
-
-    if instanceType == "pvp" then
-        blockInstance = RatedStats_NoChatDB.blockPvp
-    elseif instanceType == "arena" then
-        if IsSoloShuffle() and RatedStats_NoChatDB.allowChatInSoloShuffle then
-            blockInstance = false
-        else
-            blockInstance = RatedStats_NoChatDB.blockArena
-        end
-    end
-
-    if not blockInstance then
+    local mode = GetPvPMode()
+    if not IsModeBlocked(mode) then
         return false
     end
 
@@ -101,40 +199,19 @@ local function ShouldBlockChat(editBox)
 end
 
 -- evaluate whether to disable/restore keybinds based on current instance + settings
-local function EvaluateInstanceChat()
-    if not RatedStats_NoChatDB or not RatedStats_NoChatDB.enabled then
-        -- addon disabled => ensure bindings are restored
+    if not RatedStats_NoChatDB then
         if #storedKeys > 0 then
             RestoreChat()
         end
         return
     end
 
-    local inInstance, instanceType = IsInInstance()
+    local mode = GetPvPMode()
+    local shouldBlock = IsModeBlocked(mode)
+
     if #storedKeys == 0 then
         SaveChatKeys()
     end
-
-    local shouldBlock = false
-
-    if inInstance then
-        if instanceType == "pvp" then
-            shouldBlock = RatedStats_NoChatDB.blockPvp
-        elseif instanceType == "arena" then
-            if IsSoloShuffle() and RatedStats_NoChatDB.allowChatInSoloShuffle then
-                shouldBlock = false
-            else
-                shouldBlock = RatedStats_NoChatDB.blockArena
-            end
-        end
-    end
-
-    if shouldBlock then
-        DisableChat()
-    else
-        RestoreChat()
-    end
-end
 
 -- hook so clicks on [Raid]/[Whisper] etc also get cancelled
 hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
@@ -184,27 +261,75 @@ local function CreateOptions()
     )
 
     AddCheckbox(
-        "RATEDSTATS_NOCHAT_BLOCK_PVP",
-        "blockPvp",
-        "Block chat in battlegrounds",
-        "Block chat input in battlegrounds and epic battlegrounds.",
-        defaults.blockPvp
+        "RATEDSTATS_NOCHAT_BLOCK_ARENA_SKIRMISH",
+        "blockArenaSkirmish",
+        "Block chat in arena skirmishes",
+        "Block chat input in non-rated arena skirmishes.",
+        defaults.blockArenaSkirmish
     )
 
     AddCheckbox(
-        "RATEDSTATS_NOCHAT_BLOCK_ARENA",
-        "blockArena",
-        "Block chat in arenas",
-        "Block chat input in arenas.",
-        defaults.blockArena
+        "RATEDSTATS_NOCHAT_BLOCK_NORMAL_BG",
+        "blockNormalBG",
+        "Block chat in normal battlegrounds",
+        "Block chat input in normal (non-epic) battlegrounds.",
+        defaults.blockNormalBG
     )
 
     AddCheckbox(
-        "RATEDSTATS_NOCHAT_ALLOW_SHUFFLE",
-        "allowChatInSoloShuffle",
-        "Allow chat in Solo Shuffle",
-        "Allow chat input in Solo Shuffle even if arenas are blocked.",
-        defaults.allowChatInSoloShuffle
+        "RATEDSTATS_NOCHAT_BLOCK_EPIC_BG",
+        "blockEpicBG",
+        "Block chat in epic battlegrounds",
+        "Block chat input in epic battlegrounds.",
+        defaults.blockEpicBG
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_SOLO_SHUFFLE",
+        "blockSoloShuffle",
+        "Block chat in Solo Shuffle",
+        "Block chat input in rated Solo Shuffle matches.",
+        defaults.blockSoloShuffle
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_2V2",
+        "block2v2",
+        "Block chat in 2v2",
+        "Block chat input in rated 2v2 arenas.",
+        defaults.block2v2
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_3V3",
+        "block3v3",
+        "Block chat in 3v3",
+        "Block chat input in rated 3v3 arenas.",
+        defaults.block3v3
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_BLITZ",
+        "blockBlitz",
+        "Block chat in Battleground Blitz",
+        "Block chat input in rated Battleground Blitz (solo RBG).",
+        defaults.blockBlitz
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_RATED_BG",
+        "blockRatedBG",
+        "Block chat in rated battlegrounds",
+        "Block chat input in rated battlegrounds.",
+        defaults.blockRatedBG
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_BLOCK_OTHER_PVP",
+        "blockOtherPvP",
+        "Block chat in other PvP modes",
+        "Block chat input in brawls and any other PvP instances not matched above.",
+        defaults.blockOtherPvP
     )
 end
 
