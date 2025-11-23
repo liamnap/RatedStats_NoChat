@@ -4,6 +4,7 @@
 ## DefaultState: enabled
 ## Author: liamnap
 ## OptionalDeps: RatedStats
+## SavedVariables: RatedStats_NoChatDB
 ## IconTexture: Interface\AddOns\RatedStats\RatedStats.tga
 
 RatedStats_NoChat.lua
