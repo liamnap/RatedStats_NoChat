@@ -199,6 +199,7 @@ local function ShouldBlockChat(editBox)
 end
 
 -- evaluate whether to disable/restore keybinds based on current instance + settings
+local function EvaluateInstanceChat()
     if not RatedStats_NoChatDB then
         if #storedKeys > 0 then
             RestoreChat()
@@ -212,6 +213,13 @@ end
     if #storedKeys == 0 then
         SaveChatKeys()
     end
+
+    if shouldBlock then
+        DisableChat()
+    else
+        RestoreChat()
+    end
+end
 
 -- hook so clicks on [Raid]/[Whisper] etc also get cancelled
 hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
@@ -243,14 +251,6 @@ local function CreateOptions()
         )
         Settings.CreateCheckbox(category, setting, tooltip)
     end
-
-    AddCheckbox(
-        "RATEDSTATS_NOCHAT_ENABLED",
-        "enabled",
-        "Enable NoChat",
-        "Block your chat input in PvP instances according to the options below.",
-        defaults.enabled
-    )
 
     AddCheckbox(
         "RATEDSTATS_NOCHAT_ALLOW_WHISPERS",
