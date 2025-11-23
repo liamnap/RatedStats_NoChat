@@ -263,24 +263,24 @@ local function CreateOptions()
     AddCheckbox(
         "RATEDSTATS_NOCHAT_BLOCK_ARENA_SKIRMISH",
         "blockArenaSkirmish",
-        "Block chat in arena skirmishes",
-        "Block chat input in non-rated arena skirmishes.",
+        "Block chat in Arena Skirmishes",
+        "Block chat input in non-rated Arena Skirmishes.",
         defaults.blockArenaSkirmish
     )
 
     AddCheckbox(
         "RATEDSTATS_NOCHAT_BLOCK_NORMAL_BG",
         "blockNormalBG",
-        "Block chat in normal battlegrounds",
-        "Block chat input in normal (non-epic) battlegrounds.",
+        "Block chat in Normal Battlegrounds",
+        "Block chat input in Normal (non-epic) Battlegrounds.",
         defaults.blockNormalBG
     )
 
     AddCheckbox(
         "RATEDSTATS_NOCHAT_BLOCK_EPIC_BG",
         "blockEpicBG",
-        "Block chat in epic battlegrounds",
-        "Block chat input in epic battlegrounds.",
+        "Block chat in Epic Battlegrounds",
+        "Block chat input in Epic Battlegrounds.",
         defaults.blockEpicBG
     )
 
@@ -288,7 +288,7 @@ local function CreateOptions()
         "RATEDSTATS_NOCHAT_BLOCK_SOLO_SHUFFLE",
         "blockSoloShuffle",
         "Block chat in Solo Shuffle",
-        "Block chat input in rated Solo Shuffle matches.",
+        "Block chat input in Rated Solo Shuffle matches.",
         defaults.blockSoloShuffle
     )
 
@@ -296,7 +296,7 @@ local function CreateOptions()
         "RATEDSTATS_NOCHAT_BLOCK_2V2",
         "block2v2",
         "Block chat in 2v2",
-        "Block chat input in rated 2v2 arenas.",
+        "Block chat input in Rated 2v2 Arenas.",
         defaults.block2v2
     )
 
@@ -304,7 +304,7 @@ local function CreateOptions()
         "RATEDSTATS_NOCHAT_BLOCK_3V3",
         "block3v3",
         "Block chat in 3v3",
-        "Block chat input in rated 3v3 arenas.",
+        "Block chat input in Rated 3v3 Arenas.",
         defaults.block3v3
     )
 
@@ -312,23 +312,23 @@ local function CreateOptions()
         "RATEDSTATS_NOCHAT_BLOCK_BLITZ",
         "blockBlitz",
         "Block chat in Battleground Blitz",
-        "Block chat input in rated Battleground Blitz (solo RBG).",
+        "Block chat input in Rated Battleground Blitz (Solo RBG).",
         defaults.blockBlitz
     )
 
     AddCheckbox(
         "RATEDSTATS_NOCHAT_BLOCK_RATED_BG",
         "blockRatedBG",
-        "Block chat in rated battlegrounds",
-        "Block chat input in rated battlegrounds.",
+        "Block chat in Rated Battlegrounds",
+        "Block chat input in Rated Battlegrounds.",
         defaults.blockRatedBG
     )
 
     AddCheckbox(
         "RATEDSTATS_NOCHAT_BLOCK_OTHER_PVP",
         "blockOtherPvP",
-        "Block chat in other PvP modes",
-        "Block chat input in brawls and any other PvP instances not matched above.",
+        "Block chat in other PvP Modes",
+        "Block chat input in Brawls and any other PvP instances not matched above.",
         defaults.blockOtherPvP
     )
 end
