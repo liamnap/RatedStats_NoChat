@@ -2,7 +2,7 @@ local addonName = ... -- "RatedStats_NoChat"
 local frame = CreateFrame("Frame", addonName .. "Frame")
 
 -- brown RatedStats prefix (canvas colour you picked earlier)
-local RS_PREFIX = "|cffb69e86RatedStats:|r "
+local RS_PREFIX = "|cffb69e86Rated Stats:|r "
 
 -- store player's chat keybinds
 local storedKeys = {}
