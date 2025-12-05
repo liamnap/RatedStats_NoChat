@@ -307,8 +307,8 @@ local function CreateOptions()
     AddCheckbox(
         "RATEDSTATS_NOCHAT_ALLOW_WHISPERS",
         "allowWhispers",
-        "Allow whispers",
-        "Allow whisper chat even when other chat is blocked in PvP instances.",
+        "Allow all whispers",
+        "Allow all whisper chat even when other chat is blocked in PvP instances.",
         defaults.allowWhispers
     )
 
