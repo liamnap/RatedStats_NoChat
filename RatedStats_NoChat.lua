@@ -178,7 +178,7 @@ local function IsModeBlocked(mode)
     return false
 end
 
-local function ShouldBlockChat(editBox)
++local function ShouldBlockChat(editBox)
     if not RatedStats_NoChatDB then
         return false
     end
@@ -188,7 +188,18 @@ local function ShouldBlockChat(editBox)
         return false
     end
 
-    local chatType = editBox and (editBox:GetAttribute("chatType") or editBox.chatType)
+    if not editBox then
+        -- If we don't have an edit box, we can't make a safe decision.
+        -- Fail open rather than accidentally blocking system stuff.
+        return false
+    end
+
+    local chatType = editBox:GetAttribute("chatType") or editBox.chatType
+    if not chatType then
+        -- Same deal: if Blizzard hasn't set a chatType yet, do nothing.
+        return false
+    end
+
     local db = RatedStats_NoChatDB
 
     -- No whisper-related allowances at all: block everything in blocked modes.
@@ -197,10 +208,8 @@ local function ShouldBlockChat(editBox)
     end
 
     -- Allow all whispers: both character and Battle.net.
-    if db.allowWhispers then
-        if chatType == "WHISPER" or chatType == "BN_WHISPER" then
-            return false
-        end
+    if db.allowWhispers and (chatType == "WHISPER" or chatType == "BN_WHISPER") then
+        return false
     end
 
     -- Allow BNet-only: only BN_WHISPER is permitted.
@@ -208,8 +217,6 @@ local function ShouldBlockChat(editBox)
         if chatType == "BN_WHISPER" then
             return false
         end
-
-        -- Explicitly block character whispers when only BNet is allowed.
         if chatType == "WHISPER" then
             return true
         end
@@ -244,7 +251,7 @@ end
 
 -- hook so clicks on [Raid]/[Whisper] etc also get cancelled
 hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
-    if ShouldBlockChat(editBox) then
+    if if editBox and ShouldBlockChat(editBox) then
         editBox:ClearFocus()
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
@@ -253,7 +260,7 @@ end)
 
 -- also re-check any time the header/chat type is changed (e.g. Whisper -> Instance)
 hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
-    if ShouldBlockChat(editBox) then
+    if if editBox and ShouldBlockChat(editBox) then
         editBox:ClearFocus()
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
