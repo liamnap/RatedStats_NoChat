@@ -226,6 +226,15 @@ local function ShouldBlockChat(editBox)
     return true
 end
 
+local function BlockEditBox(editBox)
+    if not editBox then
+        return
+    end
+    editBox:ClearFocus()
+    editBox:SetText("")
+    print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
+end
+
 -- evaluate whether to disable/restore keybinds based on current instance + settings
 local function EvaluateInstanceChat()
     if not RatedStats_NoChatDB then
@@ -256,6 +265,9 @@ hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
     end
+    if editBox and ShouldBlockChat(editBox) then
+        BlockEditBox(editBox)
+    end
 end)
 
 -- also re-check any time the header/chat type is changed (e.g. Whisper -> Instance)
@@ -264,6 +276,9 @@ hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
         editBox:ClearFocus()
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
+    end
+    if editBox and ShouldBlockChat(editBox) then
+        BlockEditBox(editBox)
     end
 end)
 
@@ -278,11 +293,25 @@ local function HookChatEditBoxes()
         local editBox = _G["ChatFrame"..i.."EditBox"]
         if editBox and not editBox.RatedStats_NoChatHooked then
             editBox.RatedStats_NoChatHooked = true
+
+            -- Wrap OnEnterPressed so we can block sending in a blocked mode
+            local origEnter = editBox:GetScript("OnEnterPressed") or ChatEdit_OnEnterPressed
+            editBox.RatedStats_NoChat_OrigEnter = origEnter
+
+            editBox:SetScript("OnEnterPressed", function(self)
+                if ShouldBlockChat(self) then
+                    BlockEditBox(self)
+                    return
+                end
+                if self.RatedStats_NoChat_OrigEnter then
+                    self.RatedStats_NoChat_OrigEnter(self)
+                end
+            end)
+
+            -- Still block as soon as the box gains focus in a blocked mode
             editBox:HookScript("OnEditFocusGained", function(self)
                 if ShouldBlockChat(self) then
-                    self:ClearFocus()
-                    self:SetText("")
-                    print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
+                    BlockEditBox(self)
                 end
             end)
         end
