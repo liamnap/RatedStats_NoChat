@@ -260,6 +260,28 @@ hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
     end
 end)
 
+-- hook all chat edit boxes so that simply focusing them in a blocked mode
+-- immediately clears and defocuses them
+local function HookChatEditBoxes()
+    if not NUM_CHAT_WINDOWS then
+        return
+    end
+
+    for i = 1, NUM_CHAT_WINDOWS do
+        local editBox = _G["ChatFrame"..i.."EditBox"]
+        if editBox and not editBox.RatedStats_NoChatHooked then
+            editBox.RatedStats_NoChatHooked = true
+            editBox:HookScript("OnEditFocusGained", function(self)
+                if ShouldBlockChat(self) then
+                    self:ClearFocus()
+                    self:SetText("")
+                    print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
+                end
+            end)
+        end
+    end
+end
+
 -- Blizzard Settings (Menu > Options > AddOns)
 local function CreateOptions()
     if not Settings or not Settings.RegisterAddOnSetting then
@@ -378,9 +400,11 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if name == addonName then
             ApplyDefaults()
             CreateOptions()
+            HookChatEditBoxes()
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
         EvaluateInstanceChat()
+        HookChatEditBoxes()
     end
 end)
 
