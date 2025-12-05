@@ -178,7 +178,7 @@ local function IsModeBlocked(mode)
     return false
 end
 
-+local function ShouldBlockChat(editBox)
+local function ShouldBlockChat(editBox)
     if not RatedStats_NoChatDB then
         return false
     end
