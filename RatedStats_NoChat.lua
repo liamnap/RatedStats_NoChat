@@ -12,7 +12,8 @@ RatedStats_NoChatDB = RatedStats_NoChatDB or {}
 
 -- defaults
 local defaults = {
-    allowWhispers       = false, -- allow whispers while blocking other chat
+    allowWhispers       = false, -- allow whispers (both character and BNet) while blocking other chat
+    allowBNOnly         = false, -- allow only Battle.net whispers while blocking everything else
 
     -- per-mode blocks (all default ON)
     blockArenaSkirmish  = true,  -- non-rated arena skirmishes
@@ -187,14 +188,34 @@ local function ShouldBlockChat(editBox)
         return false
     end
 
-    -- respect whisper setting
     local chatType = editBox and (editBox:GetAttribute("chatType") or editBox.chatType)
-    if chatType == "WHISPER" or chatType == "BN_WHISPER" then
-        if RatedStats_NoChatDB.allowWhispers then
+    local db = RatedStats_NoChatDB
+
+    -- No whisper-related allowances at all: block everything in blocked modes.
+    if not db.allowWhispers and not db.allowBNOnly then
+        return true
+    end
+
+    -- Allow all whispers: both character and Battle.net.
+    if db.allowWhispers then
+        if chatType == "WHISPER" or chatType == "BN_WHISPER" then
             return false
         end
     end
 
+    -- Allow BNet-only: only BN_WHISPER is permitted.
+    if db.allowBNOnly then
+        if chatType == "BN_WHISPER" then
+            return false
+        end
+
+        -- Explicitly block character whispers when only BNet is allowed.
+        if chatType == "WHISPER" then
+            return true
+        end
+    end
+
+    -- Any other chat type in a blocked mode is blocked.
     return true
 end
 
@@ -230,6 +251,15 @@ hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
     end
 end)
 
+-- also re-check any time the header/chat type is changed (e.g. Whisper -> Instance)
+hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
+    if ShouldBlockChat(editBox) then
+        editBox:ClearFocus()
+        editBox:SetText("")
+        print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
+    end
+end)
+
 -- Blizzard Settings (Menu > Options > AddOns)
 local function CreateOptions()
     if not Settings or not Settings.RegisterAddOnSetting then
@@ -258,6 +288,14 @@ local function CreateOptions()
         "Allow whispers",
         "Allow whisper chat even when other chat is blocked in PvP instances.",
         defaults.allowWhispers
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_ALLOW_BN_ONLY",
+        "allowBNOnly",
+        "Allow Battle.net whispers only",
+        "Allow only Battle.net whispers when other chat is blocked. In-game character whispers remain blocked.",
+        defaults.allowBNOnly
     )
 
     AddCheckbox(
