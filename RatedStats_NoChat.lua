@@ -251,7 +251,7 @@ end
 
 -- hook so clicks on [Raid]/[Whisper] etc also get cancelled
 hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
-    if if editBox and ShouldBlockChat(editBox) then
+    if editBox and ShouldBlockChat(editBox) then
         editBox:ClearFocus()
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
@@ -260,7 +260,7 @@ end)
 
 -- also re-check any time the header/chat type is changed (e.g. Whisper -> Instance)
 hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
-    if if editBox and ShouldBlockChat(editBox) then
+    if editBox and ShouldBlockChat(editBox) then
         editBox:ClearFocus()
         editBox:SetText("")
         print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
