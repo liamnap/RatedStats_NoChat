@@ -4,8 +4,9 @@ local frame = CreateFrame("Frame", addonName .. "Frame")
 -- brown RatedStats prefix (canvas colour you picked earlier)
 local RS_PREFIX = "|cffb69e86Rated Stats:|r "
 
--- store player's chat keybinds
-local storedKeys = {}
+-- state so we only print on transitions (not every keypress/click)
+local lastInstanceBlocked = nil
+local lastBlockNoticeTime = 0
 
 -- SavedVariables table
 RatedStats_NoChatDB = RatedStats_NoChatDB or {}
@@ -33,32 +34,6 @@ local function ApplyDefaults()
             RatedStats_NoChatDB[key] = value
         end
     end
-end
-
--- helper: save all keys currently bound to OPENCHAT
-local function SaveChatKeys()
-    wipe(storedKeys)
-    local k1, k2 = GetBindingKey("OPENCHAT")
-    if k1 then table.insert(storedKeys, k1) end
-    if k2 then table.insert(storedKeys, k2) end
-end
-
--- helper: unbind those keys
-local function DisableChat()
-    for _, key in ipairs(storedKeys) do
-        SetBinding(key, "")
-    end
-    SaveBindings(GetCurrentBindingSet())
-    print(RS_PREFIX .. "Chat input |cffff5555disabled|r in PvP.")
-end
-
--- helper: restore the bindings
-local function RestoreChat()
-    for _, key in ipairs(storedKeys) do
-        SetBinding(key, "OPENCHAT")
-    end
-    SaveBindings(GetCurrentBindingSet())
-    print(RS_PREFIX .. "Chat input |cff55ff55restored|r.")
 end
 
 local function IsSoloShuffle()
@@ -226,45 +201,58 @@ local function ShouldBlockChat(editBox)
     return true
 end
 
+local function PrintInstanceState(shouldBlock)
+    if not RatedStats_NoChatDB then
+        return
+    end
+
+    if shouldBlock then
+        -- If whispers are allowed, be honest: it’s restricted, not fully “off”
+        if RatedStats_NoChatDB.allowWhispers or RatedStats_NoChatDB.allowBNOnly then
+            print(RS_PREFIX .. "Chat input |cffffaa55restricted|r in PvP (whispers allowed by settings).")
+        else
+            print(RS_PREFIX .. "Chat input |cffff5555disabled|r in PvP.")
+        end
+    else
+        print(RS_PREFIX .. "Chat input |cff55ff55restored|r.")
+    end
+end
+
+local function EvaluateInstanceChatState()
+    local mode = GetPvPMode()
+    local shouldBlock = IsModeBlocked(mode)
+
+    if lastInstanceBlocked == nil then
+        -- First evaluation: only announce if we're actually in a blocked mode.
+        lastInstanceBlocked = shouldBlock
+        if shouldBlock then
+            PrintInstanceState(true)
+        end
+        return
+    end
+
+    if shouldBlock ~= lastInstanceBlocked then
+        lastInstanceBlocked = shouldBlock
+        PrintInstanceState(shouldBlock)
+    end
+end
+
 local function BlockEditBox(editBox)
     if not editBox then
         return
     end
     editBox:ClearFocus()
     editBox:SetText("")
-    print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
-end
-
--- evaluate whether to disable/restore keybinds based on current instance + settings
-local function EvaluateInstanceChat()
-    if not RatedStats_NoChatDB then
-        if #storedKeys > 0 then
-            RestoreChat()
-        end
-        return
-    end
-
-    local mode = GetPvPMode()
-    local shouldBlock = IsModeBlocked(mode)
-
-    if #storedKeys == 0 then
-        SaveChatKeys()
-    end
-
-    if shouldBlock then
-        DisableChat()
-    else
-        RestoreChat()
+    -- Prevent spam if user keeps hitting Enter
+    local now = GetTime()
+    if now - lastBlockNoticeTime >= 2 then
+        lastBlockNoticeTime = now
+        print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
     end
 end
 
 -- hook so clicks on [Raid]/[Whisper] etc also get cancelled
 hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
-    if editBox and ShouldBlockChat(editBox) then
-        editBox:ClearFocus()
-        editBox:SetText("")
-        print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
-    end
     if editBox and ShouldBlockChat(editBox) then
         BlockEditBox(editBox)
     end
@@ -272,11 +260,6 @@ end)
 
 -- also re-check any time the header/chat type is changed (e.g. Whisper -> Instance)
 hooksecurefunc("ChatEdit_UpdateHeader", function(editBox)
-    if editBox and ShouldBlockChat(editBox) then
-        editBox:ClearFocus()
-        editBox:SetText("")
-        print(RS_PREFIX .. "Chat input |cffff5555blocked|r in PvP.")
-    end
     if editBox and ShouldBlockChat(editBox) then
         BlockEditBox(editBox)
     end
@@ -437,10 +420,11 @@ frame:SetScript("OnEvent", function(self, event, ...)
             ApplyDefaults()
             CreateOptions()
             HookChatEditBoxes()
+            EvaluateInstanceChatState()
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
-        EvaluateInstanceChat()
         HookChatEditBoxes()
+        EvaluateInstanceChatState()
     end
 end)
 
