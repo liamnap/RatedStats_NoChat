@@ -14,6 +14,30 @@ Rated Stats – NoChat lets you **see all chat messages**, but **blocks your cha
 
 ---
 
+## Settings
+
+Retail Settings UI:
+`Esc → Options → AddOns → Rated Stats - NoChat`
+
+### Whisper exceptions
+- **Allow all whispers**
+  - Allows both character and Battle.net whispers while other chat is blocked in PvP.
+- **Allow Battle.net whispers only**
+  - Allows only Battle.net whispers; in-game character whispers remain blocked.
+
+### Per-mode blocking (all ON by default)
+- Block chat in Arena Skirmishes
+- Block chat in Normal Battlegrounds
+- Block chat in Epic Battlegrounds
+- Block chat in Solo Shuffle
+- Block chat in 2v2
+- Block chat in 3v3
+- Block chat in Battleground Blitz
+- Block chat in Rated Battlegrounds
+- Block chat in other PvP Modes
+
+---
+
 ## Install
 
 **Recommended:** Install from CurseForge:  
