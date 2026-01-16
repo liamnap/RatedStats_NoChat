@@ -76,6 +76,8 @@ Source gallery (CurseForge): https://www.curseforge.com/wow/addons/rated-stats-n
 <p><strong>Example Output</strong></p>
 <img src="https://media.forgecdn.net/attachments/1470/785/screenshot-2025-12-05-150910-png.png" width="100%"/>
 
+</details>
+
 ---
 
 ## Related projects
