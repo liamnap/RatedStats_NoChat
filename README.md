@@ -36,6 +36,9 @@ Retail Settings UI:
 - Block chat in Rated Battlegrounds
 - Block chat in other PvP Modes
 
+- When you enter/leave a blocked PvP mode, it prints “Chat input disabled/restored”.
+- If you keep pressing Enter in PvP, it prints a “blocked” reminder but rate-limited (every 2 seconds).
+
 ---
 
 ## Install
