@@ -65,6 +65,19 @@ This is a “guardrail” addon:
 
 ---
 
+## Gallery
+
+Source gallery (CurseForge): https://www.curseforge.com/wow/addons/rated-stats-nochat#gallery
+
+<details>
+<summary><strong>Click to expand screenshots</strong></summary>
+<br/>
+
+<p><strong>Example Output</strong></p>
+<img src="https://media.forgecdn.net/attachments/1469/908/screenshot-2026-01-15-171620-jpeg.jpeg](https://media.forgecdn.net/attachments/1470/785/screenshot-2025-12-05-150910-png.png" width="100%"/>
+
+---
+
 ## Related projects
 
 - Rated Stats (Rated PvP match historian): https://www.curseforge.com/wow/addons/rated-stats
