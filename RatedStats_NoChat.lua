@@ -15,7 +15,7 @@ RatedStats_NoChatDB = RatedStats_NoChatDB or {}
 local defaults = {
     allowWhispers       = false, -- allow whispers (both character and BNet) while blocking other chat
     allowBNOnly         = false, -- allow only Battle.net whispers while blocking everything else
-    allowParty          = false, -- always allow PARTY chat, even in blocked PvP modes
+    allowParty          = true, -- always allow PARTY chat, even in blocked PvP modes
 
     -- per-mode blocks (all default ON)
     blockArenaSkirmish  = true,  -- non-rated arena skirmishes
