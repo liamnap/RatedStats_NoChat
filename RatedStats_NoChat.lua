@@ -15,6 +15,7 @@ RatedStats_NoChatDB = RatedStats_NoChatDB or {}
 local defaults = {
     allowWhispers       = false, -- allow whispers (both character and BNet) while blocking other chat
     allowBNOnly         = false, -- allow only Battle.net whispers while blocking everything else
+    allowParty          = false, -- always allow PARTY chat, even in blocked PvP modes
 
     -- per-mode blocks (all default ON)
     blockArenaSkirmish  = true,  -- non-rated arena skirmishes
@@ -177,6 +178,11 @@ local function ShouldBlockChat(editBox)
 
     local db = RatedStats_NoChatDB
 
+    -- Always allow party chat if configured, regardless of other restrictions.
+    if db.allowParty and chatType == "PARTY" then
+        return false
+    end
+    
     -- No whisper-related allowances at all: block everything in blocked modes.
     if not db.allowWhispers and not db.allowBNOnly then
         return true
@@ -337,6 +343,14 @@ local function CreateOptions()
         "Allow Battle.net whispers only",
         "Allow only Battle.net whispers when other chat is blocked. In-game character whispers remain blocked.",
         defaults.allowBNOnly
+    )
+
+    AddCheckbox(
+        "RATEDSTATS_NOCHAT_ALLOW_PARTY",
+        "allowParty",
+        "Always allow Party chat",
+        "Never block Party chat, even when other chat is restricted/blocked in PvP instances.",
+        defaults.allowParty
     )
 
     AddCheckbox(
