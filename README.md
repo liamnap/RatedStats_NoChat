@@ -24,6 +24,8 @@ Retail Settings UI:
   - Allows both character and Battle.net whispers while other chat is blocked in PvP.
 - **Allow Battle.net whispers only**
   - Allows only Battle.net whispers; in-game character whispers remain blocked.
+- **Always allow Party chat**
+  - Never block Party chat, even when other chat is restricted/blocked in PvP instances.
 
 ### Per-mode blocking (all ON by default)
 - Block chat in Arena Skirmishes
