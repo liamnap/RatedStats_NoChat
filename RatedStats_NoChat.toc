@@ -1,5 +1,5 @@
 ## Title: RatedStats - NoChat
-## Interface: 110207, 120000
+## Interface: 110207, 120000, 120001
 ## Notes: Blocks chat input while in PvP instances
 ## DefaultState: enabled
 ## Author: liamnap
